@@ -105,3 +105,6 @@ cyverse/irods-rs    4.1.10                       551961059431        About a min
 cyverse/irods-rs    4.1.10_2019-04-10T23-47-39   551961059431        About a minute ago   392MB
 centos              7                            9f38484d220f        3 weeks ago          202MB
 ```
+
+If the `-p` or `--push` option is provided to `build`, the image will be pushed
+to Dockerhub if a new image was created.

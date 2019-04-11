@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Usage:
+#  build [options]
+#
+# This program builds the cyverse/irods-rs image. Each build is tagged with the
+# iRODS version and ISO 8601 style build time with the form `version_time`, e.g.,
+# `4.1.10_2019-04-10T23-23-53.
+#
+# Options:
+#  -p, --push  push the new image to Dockerhub
+
+set -e
+
+readonly ExecPath=$(readlink --canonicalize "$0")
+readonly ExecName=$(basename "$ExecPath")
+readonly BaseDir=$(dirname "$ExecPath")
+
+readonly IrodsRelease=4.1.10
+
+readonly Repo=cyverse
+readonly ImageName=irods-rs
+
+main()
+{
+  local opts
+  if ! opts=$(getopt --longoptions push --name "$ExecName" --options p -- "$@")
+  then
+    printf 'failed to parse command line\n' >&2
+    return 1
+  fi
+
+  eval set -- "$opts"
+
+  local push=0
+
+  while true
+  do
+    case "$1" in
+      -p|--push)
+        push=1
+        shift
+        ;;
+      --)
+        shift
+        break
+        ;;
+      *)
+        printf 'unknown option: %s\n' "$1" >&2
+        return 1
+        ;;
+    esac
+  done
+
+  local now
+  now=$(date --utc '+%Y-%m-%dT%H-%M-%S')
+
+  local currentImage="$Repo"/"$ImageName":"$IrodsRelease"
+  local newImage="$Repo"/"$ImageName":"$IrodsRelease"_"$now"
+
+  docker pull "$currentImage" 2> /dev/null || true
+
+  local currentId
+  currentId=$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id)
+
+  docker build --tag "$newImage" "$BaseDir"
+
+  local newId
+  newId=$(docker image inspect "$newImage" | jq .[0].Id)
+
+  if [[ "$newId" != "$currentId" ]]
+  then
+    docker tag "$newImage" "$currentImage"
+
+    if [[ "$push" -ne 0 ]]
+    then
+      docker push "$newImage"
+      docker push "$currentImage"
+    fi
+  else
+    docker rmi "$newImage"
+  fi
+}
+
+
+main "$@"

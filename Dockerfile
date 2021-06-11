@@ -1,22 +1,20 @@
 FROM centos:7
 
-### Prepare yum repos
-RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+### Install dumb-init
+ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 \
+  /usr/local/bin/dumb-init
+RUN chmod +x /usr/local/bin/dumb-init
+
+### Install iRODS resource server
+ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
+RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
+    rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     yum --assumeyes install epel-release && \
     rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
-### Install dumb-init
-    yum --assumeyes install wget && \
-    wget --output-document /usr/local/bin/dumb-init \
-         https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 && \
-    chmod +x /usr/local/bin/dumb-init && \
-    yum --assumeyes remove wget && \
-### Install iRODS resource server
-    yum --assumeyes install \
-        which \
-        https://files.renci.org/pub/irods/releases/4.1.10/centos7/irods-resource-4.1.10-centos7-x86_64.rpm && \
+    yum --assumeyes install irods-server-4.2.8 && \
     mkdir /var/lib/irods/.irods && \
     adduser --system --comment 'iRODS Administrator' --home-dir /var/lib/irods --shell /bin/bash \
-            irods && \
+      irods && \
     chown --recursive irods:irods /etc/irods /var/lib/irods && \
 ### Install iRODS management script dependencies
     yum --assumeyes install jq sysvinit-tools && \

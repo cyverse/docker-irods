@@ -1,51 +1,45 @@
 # docker-irods-rs
 
-This repository has the source for a docker image intended to be a base image
-for an iRODS resource server. It creates the image that can be found on
-dockerhub at `cyverse/irods-rs`.
-
+This repository has the source for a docker image intended to be a base image for an iRODS catalog
+conumser. It creates the image that can be found on Dockerhub at `cyverse/irods-catalog-consumer`.
 
 ## Design
 
-This image is intended to be a base image. I.e., it is not intended to have
-containers instantiated from it directly. As a consequence, exposing volumes
-and ports is left to the derived images. Likewise, no configuration files have
-been modified from their defaults.
+This image is intended to be a base image. I.e., it is not intended to have containers instantiated
+from it directly. As a consequence, exposing volumes and ports is left to the derived images.
+Likewise, no configuration files have been modified from their defaults.
 
-The image defines one environment variable to hold the password of the clerver
-user, `IRODS_CLERVER_PASSWORD`. It sets the value to `rods`. It is needed by the
-entry point to initialize the authentication file, since this file cannot be in
-the image.
+The image defines one environment variable to hold the password of the clerver user,
+`IRODS_CLERVER_PASSWORD`. It sets the value to `rods`. It is needed by the entry point to
+initialize the authentication file, since this file cannot be in the image.
 
-The entry point starts and stops the resource server. On start, it waits until
-the IES can be detected before authenticating the clerver user and start the
-resource service. This means that bringing up the resource server need not wait
-for the IES to be running. The entry point traps `SIGTERM` passed down from
-docker and stops the service before shutting down. Using a `CMD` instruction, a
-derived image can pass in an executable that the entry point will call before
-and after both starting and stopping the resource service.
+The entry point starts and stops the iRODS service. On start, it waits until the catalog provider
+can be detected before authenticating the clerver user and start the iRODS service. This means that
+bringing up the consumer need not wait for the provider to be running. The entry point traps
+`SIGTERM` passed down from Docker and stops the service before shutting down. Using a `CMD`
+instruction, a derived image can pass in an executable that the entry point will call before and
+after both starting and stopping the service.
 
-The entry point allows for an executable to be provided by a derived image
-through a `CMD` instruction in its dockerfile. This executable must accept four
-commands as its last argument. These commands tell the executable the
-current stage of the service's execution. Here are the commands.
+The entry point allows for an executable to be provided by a derived image through a `CMD`
+instruction in its Dockerfile. This executable must accept four commands as its last argument.
+These commands tell the executable the current stage of the service's execution. Here are the
+commands.
 
-* `before_start`  The executable is called with this before the IES is detected.
-It allows the container to perform any setup operations that need to occur
-before the resource service is started.
-* `after_start`  The executable is called with this immediately after the
-resource service is started. It allows the container to perform any setup
-operations that need to occur when the service is running.
-* `before_stop`  The executable is called with this immediately before the
-resource service is stopped. It allows the container to perform any tear down
-operations that need to occur when the service is running.
-* `after_stop`  The executable is called with this argument after the resource
-service has stopped. It allows the container to perform any tear down operations
-that need to occur after the service has stopped.
+* `before_start`  The executable is called with this before the catlog provider is detected. It
+allows the container to perform any setup operations that need to occur before the iRODS service is
+started.
+* `after_start`  The executable is called with this immediately after the iRODS service is started.
+It allows the container to perform any setup operations that need to occur when the service is
+running.
+* `before_stop`  The executable is called with this immediately before the iRODS service is stopped.
+It allows the container to perform any tear down operations that need to occur when the service is
+running.
+* `after_stop`  The executable is called with this argument after the iRODS service has stopped. It
+allows the container to perform any tear down operations that need to occur after the service has
+stopped.
 
-Here's an example of a bash script, `control-status.sh`, that could be used to
-set the status of a given resource as `up` when its server is started and `down`
-when stopped.
+Here's an example of a bash script, `control-status.sh`, that could be used to set the status of a
+given resource as `up` when its server is started and `down` when stopped.
 
 ```bash
 #!/bin/bash
@@ -64,11 +58,11 @@ case "$2" in
 esac
 ```
 
-Here's a snippet from the derived image's Dockerfile showing how the bash script
-can be provided to the entry point.
+Here's a snippet from the derived image's Dockerfile showing how the bash script can be provided to
+the entry point.
 
 ```Dockerfile
-FROM cyverse/irods-rs:4.1.10
+FROM cyverse/irods-catalog-consumer:4.2.8
 
 ### other stuff
 
@@ -83,28 +77,27 @@ CMD [ "/control-status.sh", "CoordRes" ]
 
 The command `./build` can be used to build the image.
 
-Each time an image is built, it is tagged with the iRODS version and the UTC
-time when the build started separated by an underscore. The tag has an ISO 8601
-style form _**yyyy**-**MM**-**dd**T**hh**-**mm**-**ss**_ where _**yyyy**_ is the
-four digit year, _**MM**_ is the two digit month of the year number, _**dd**__
-is the two digit day of the month number, _**hh**_ is the two digit hour of the
-day, _**mm**_ is the two digit minutes past the hour, and _**ss**_ is the two
-digit seconds past the minute. Here's an example tag:
-`4.1.10_2019-04-09T22-32-49`. The latest version of an image for a given iRODS
-version will be tagged with the iRODS version.
+Each time an image is built, it is tagged with the iRODS version and the UTC time when the build
+started separated by an underscore. The tag has an ISO 8601 style form
+_**yyyy**-**MM**-**dd**T**hh**-**mm**-**ss**_ where _**yyyy**_ is the four digit year, _**MM**_ is
+the two digit month of the year number, _**dd**__ is the two digit day of the month number,
+_**hh**_ is the two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and
+_**ss**_ is the two digit seconds past the minute. Here's an example tag:
+`4.2.8_2021-06-11T21-46-59`. The latest version of an image for a given iRODS version will be tagged
+with the iRODS version.
 
 ```
 prompt> date -u
-Wed Apr 10 23:47:11 UTC 2019
+Fri Jun 11 21:47:20 UTC 2021
 
 prompt> ./build
 
 prompt> docker images
-REPOSITORY          TAG                          IMAGE ID            CREATED              SIZE
-cyverse/irods-rs    4.1.10                       551961059431        About a minute ago   392MB
-cyverse/irods-rs    4.1.10_2019-04-10T23-47-39   551961059431        About a minute ago   392MB
-centos              7                            9f38484d220f        3 weeks ago          202MB
+REPOSITORY                       TAG                         IMAGE ID       CREATED          SIZE
+cyverse/irods-catalog-consumer   4.2.8                       01c7f4dda2c9   11 seconds ago   454MB
+cyverse/irods-catalog-consumer   4.2.8_2021-06-11T21-46-59   01c7f4dda2c9   11 seconds ago   454MB
+centos                           7                           8652b9f0cb4c   6 months ago     204MB
 ```
 
-If the `-p` or `--push` option is provided to `build`, the image will be pushed
-to Dockerhub if a new image was created.
+If the `-p` or `--push` option is provided to `build`, the image will be pushed to Dockerhub if a
+new image was created.

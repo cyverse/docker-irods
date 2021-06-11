@@ -10,7 +10,7 @@
 # IRODS_CLERVER_PASSWORD   the clerver user password
 
 
-set -e
+set -o errexit
 
 declare PeripheryExec
 declare TailPid
@@ -24,8 +24,8 @@ main()
   fi
 
   call_periphery before_start
-  wait_for_ies
-  init_clerver_session
+  local provider="$(wait_for_provider)"
+  init_clerver_session "$provider"
   trap stop_server SIGTERM
   start_server
 }
@@ -44,21 +44,20 @@ call_periphery()
 
 init_clerver_session()
 {
-  local icatHost
-  icatHost=$(jq -r '.icat_host' /etc/irods/server_config.json)
+  local provider="$1"
 
-  IRODS_HOST="$icatHost" iinit "$IRODS_CLERVER_PASSWORD"
+  IRODS_HOST="$provider" iinit "$IRODS_CLERVER_PASSWORD"
 }
 
 
 start_server()
 {
-  /var/lib/irods/iRODS/irodsctl start
+  /var/lib/irods/irodsctl start
   call_periphery after_start
   printf 'Ready\n'
 
   local irodsPid
-  while irodsPid=$(pidof -s /var/lib/irods/iRODS/server/bin/irodsServer)
+  while irodsPid=$(pidof -s /usr/sbin/irodsServer)
   do
     tail --follow /dev/null --pid "$irodsPid" &
     TailPid="$!"
@@ -71,7 +70,7 @@ start_server()
 stop_server()
 {
   call_periphery before_stop
-  /var/lib/irods/iRODS/irodsctl stop
+  /var/lib/irods/irodsctl stop
   call_periphery after_stop
 
   if [[ -n "$TailPid" ]]
@@ -84,24 +83,30 @@ stop_server()
 }
 
 
-wait_for_ies()
+wait_for_provider()
 {
-  local icatHost
-  icatHost=$(jq -r '.icat_host' /etc/irods/server_config.json)
-
   local zonePort
   zonePort=$(jq -r '.zone_port' /etc/irods/server_config.json)
 
-
-  # Wait for IES to become available
-  until exec 3<> /dev/tcp/"$icatHost"/"$zonePort"
+  # Wait for a provider to become available
+  while true
   do
-    printf 'Waiting for IES\n'
-    sleep 1
-  done 2> /dev/null
+    local provider
+    for provider in "$(jq -r '.catalog_provider_hosts | .[]' /etc/irods/server_config.json)"
+    do
+      printf 'Waiting for a provider\n' >&2
 
-  exec 3<&-
-  exec 3>&-
+      if exec 3<> /dev/tcp/"$provider"/"$zonePort" 2> /dev/null
+      then
+        exec 3>&-
+        exec 3<&-
+        echo "$provider"
+        return
+      fi
+    done
+
+    sleep 1
+  done
 }
 
 

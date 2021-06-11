@@ -3,23 +3,23 @@
 # Usage:
 #  build [options]
 #
-# This program builds the cyverse/irods-rs image. Each build is tagged with the
-# iRODS version and ISO 8601 style build time with the form `version_time`, e.g.,
-# `4.1.10_2019-04-10T23-23-53.
+# This program builds the cyverse/irods-catalog-consumer image. Each build is
+# tagged with the iRODS version and ISO 8601 style build time with the form
+# `version_time`, e.g., `4.2.8_2021-06-11T21-46-59'.
 #
 # Options:
 #  -p, --push  push the new image to Dockerhub
 
-set -e
+set -o errexit
 
 readonly ExecPath=$(readlink --canonicalize "$0")
 readonly ExecName=$(basename "$ExecPath")
 readonly BaseDir=$(dirname "$ExecPath")
 
-readonly IrodsRelease=4.1.10
+readonly IrodsRelease=4.2.8
 
 readonly Repo=cyverse
-readonly ImageName=irods-rs
+readonly ImageName=irods-catalog-consumer
 
 main()
 {

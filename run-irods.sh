@@ -9,8 +9,7 @@
 #
 # IRODS_CLERVER_PASSWORD   the clerver user password
 
-
-set -o errexit
+set -o errexit -o nounset -o pipefail
 
 declare PeripheryExec
 declare TailPid
@@ -23,22 +22,27 @@ main()
     PeripheryExec="$*"
   fi
 
-  call_periphery before_start
-  local provider="$(wait_for_provider)"
-  init_clerver_session "$provider"
-  trap stop_server SIGTERM
-  start_server
-}
-
-
-call_periphery()
-{
-  local cmd="$1"
-
-  if [[ -n "$PeripheryExec" ]]
+  if [[ am_provider ]]
   then
-    eval "$PeripheryExec" "$cmd"
+    start_server
+    init_clerver_session localhost
+  else
+    init_clerver_session "$(wait_for_provider)"
+    start_server
   fi
+
+  trap stop_server SIGTERM
+
+  printf 'Ready\n'
+
+  local irodsPid
+  while irodsPid=$(pidof -s /usr/sbin/irodsServer)
+  do
+    tail --follow /dev/null --pid "$irodsPid" &
+    TailPid="$!"
+    wait "$TailPid"
+    TailPid=
+  done
 }
 
 
@@ -52,18 +56,9 @@ init_clerver_session()
 
 start_server()
 {
+  call_periphery before_start
   /var/lib/irods/irodsctl start
   call_periphery after_start
-  printf 'Ready\n'
-
-  local irodsPid
-  while irodsPid=$(pidof -s /usr/sbin/irodsServer)
-  do
-    tail --follow /dev/null --pid "$irodsPid" &
-    TailPid="$!"
-    wait "$TailPid"
-    TailPid=
-  done
 }
 
 
@@ -83,16 +78,33 @@ stop_server()
 }
 
 
+call_periphery()
+{
+  local cmd="$1"
+
+  if [[ -n "$PeripheryExec" ]]
+  then
+    eval "$PeripheryExec" "$cmd"
+  fi
+}
+
+
+am_provider()
+{
+  [[ "$(query_server_config .plugin_configuration.database)" != null ]]
+}
+
+
 wait_for_provider()
 {
   local zonePort
-  zonePort=$(jq -r '.zone_port' /etc/irods/server_config.json)
+  zonePort="$(query_server_config .zone_port)"
 
   # Wait for a provider to become available
   while true
   do
     local provider
-    for provider in "$(jq -r '.catalog_provider_hosts | .[]' /etc/irods/server_config.json)"
+    for provider in "$(query_server_config '.catalog_provider_hosts | .[]')"
     do
       printf 'Waiting for a provider\n' >&2
 
@@ -107,6 +119,14 @@ wait_for_provider()
 
     sleep 1
   done
+}
+
+
+query_server_config()
+{
+  local query="$1"
+
+  jq -r "$query" /etc/irods/server_config.json
 }
 
 

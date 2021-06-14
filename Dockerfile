@@ -16,6 +16,8 @@ RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
     adduser --system --comment 'iRODS Administrator' --home-dir /var/lib/irods --shell /bin/bash \
       irods && \
     chown --recursive irods:irods /etc/irods /var/lib/irods && \
+### Installing undocumented 4.2.8 dependency, unixODBC
+    yum --assumeyes install unixODBC && \
 ### Install iRODS management script dependencies
     yum --assumeyes install jq sysvinit-tools && \
 ### Clear yum cache for smaller image

@@ -1,9 +1,34 @@
 #!/bin/bash
 #
 # Usage:
-#  run-irods
+#  run-irods [PERIPHERY-EXEC [ARG ...]]
 #
-# This script starts the iRODS resource server and waits for a SIGTERM.
+# Options:
+#  PERIPHERY-EXEC  an executable that will perform any setup and tear down tasks
+#  ARG             an argument passed to PERIPHERY-EXEC
+#
+# PERIPHERY_EXEC must accept four commands as its last argument. These commands
+# tell the executable the current stage of the service's execution. Here are the
+# commands.
+#
+# before_start  The executable is called with this before the iRODS service is
+#               started. If it's a catalog consumer, catalog provider detection
+#               occurs afterwards. This allows the container to perform any
+#               setup operations that need to occur before the iRODS service is
+#               started.
+# after_start   The executable is called with this after the iRODS service is
+#               started. This allows the container to perform any setup
+#               operations that need to occur when the service is running.
+# before_stop   The executable is called with this before the iRODS service is
+#               stopped. This allows the container to perform any tear down
+#               operations that need to occur when the service is running.
+# after_stop    The executable is called with this argument after the iRODS
+#               service has stopped. This allows the container to perform any
+#               tear down operations that need to occur after the service has
+#               stopped.
+#
+# After `PERIPHERY_EXEC ARG ... after_start` has completed, the script waits for
+# a SIGTERM, before calling `PERIPHERY_EXEC ARG ... before_stop`.
 #
 # This script expects the following environment variables to be defined.
 #
@@ -11,7 +36,8 @@
 
 set -o errexit -o nounset -o pipefail
 
-declare PeripheryExec
+declare PERIPHERY_EXEC
+
 declare TailPid
 
 
@@ -19,14 +45,17 @@ main()
 {
   if [[ "$#" -ge 1 ]]
   then
-    PeripheryExec="$*"
+    PERIPHERY_EXEC="$*"
   fi
+  readonly PERIPHERY_EXEC
 
-  if [[ am_provider ]]
+  if am_provider
   then
+    printf 'Starting catalog provider\n'
     start_server
     init_clerver_session localhost
   else
+    printf 'Starting catalog consumer\n'
     init_clerver_session "$(wait_for_provider)"
     start_server
   fi
@@ -82,9 +111,9 @@ call_periphery()
 {
   local cmd="$1"
 
-  if [[ -n "$PeripheryExec" ]]
+  if [[ -n "$PERIPHERY_EXEC" ]]
   then
-    eval "$PeripheryExec" "$cmd"
+    eval "$PERIPHERY_EXEC" "$cmd"
   fi
 }
 
@@ -104,7 +133,7 @@ wait_for_provider()
   while true
   do
     local provider
-    for provider in "$(query_server_config '.catalog_provider_hosts | .[]')"
+    for provider in $(query_server_config '.catalog_provider_hosts | .[]')
     do
       printf 'Waiting for a provider\n' >&2
 

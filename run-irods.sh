@@ -41,13 +41,18 @@ declare PERIPHERY_EXEC
 declare TailPid
 
 
-main()
-{
+main() {
   if [[ "$#" -ge 1 ]]
   then
     PERIPHERY_EXEC="$*"
   fi
   readonly PERIPHERY_EXEC
+
+  if ! configured
+  then
+    printf 'iRODS isn not configured. Exiting\n' >&2
+    return 1
+  fi
 
   if am_provider
   then
@@ -75,24 +80,26 @@ main()
 }
 
 
-init_clerver_session()
-{
+configured() {
+  [[ -e /etc/irods/server_config.json ]] && [[ -e /var/lib/irods/.irods/irods_environment.json ]]
+}
+
+
+init_clerver_session() {
   local provider="$1"
 
   IRODS_HOST="$provider" iinit "$IRODS_CLERVER_PASSWORD"
 }
 
 
-start_server()
-{
+start_server() {
   call_periphery before_start
   /var/lib/irods/irodsctl start
   call_periphery after_start
 }
 
 
-stop_server()
-{
+stop_server() {
   call_periphery before_stop
   /var/lib/irods/irodsctl stop
   call_periphery after_stop
@@ -107,8 +114,7 @@ stop_server()
 }
 
 
-call_periphery()
-{
+call_periphery() {
   local cmd="$1"
 
   if [[ -n "$PERIPHERY_EXEC" ]]
@@ -118,14 +124,12 @@ call_periphery()
 }
 
 
-am_provider()
-{
+am_provider() {
   [[ "$(query_server_config .plugin_configuration.database)" != null ]]
 }
 
 
-wait_for_provider()
-{
+wait_for_provider() {
   local zonePort
   zonePort="$(query_server_config .zone_port)"
 
@@ -151,8 +155,7 @@ wait_for_provider()
 }
 
 
-query_server_config()
-{
+query_server_config() {
   local query="$1"
 
   jq -r "$query" /etc/irods/server_config.json

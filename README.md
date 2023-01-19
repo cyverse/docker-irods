@@ -25,31 +25,32 @@ instruction in its Dockerfile. This executable must accept four commands as its 
 These commands tell the executable the current stage of the service's execution. Here are the
 commands.
 
-* `before_start`  The executable is called with this before the iRODS service is started. If it's a
+* `before_start` - The executable is called with this before the iRODS service is started. If it's a
 catalog consumer, catalog provider detection occurs afterwards. This allows the container to perform
 any setup operations that need to occur before the iRODS service is started.
-* `after_start`  The executable is called with this after the iRODS service is started. This allows
+* `after_start` - The executable is called with this after the iRODS service is started. This allows
 the container to perform any setup operations that need to occur when the service is running.
-* `before_stop`  The executable is called with this before the iRODS service is stopped. This allows
-the container to perform any tear down operations that need to occur when the service is running.
-* `after_stop`  The executable is called with this argument after the iRODS service has stopped.
-This  allows the container to perform any tear down operations that need to occur after the service
+* `before_stop` - The executable is called with this before the iRODS service is stopped. This
+allows the container to perform any tear down operations that need to occur when the service is
+running.
+* `after_stop` - The executable is called with this argument after the iRODS service has stopped.
+This allows the container to perform any tear down operations that need to occur after the service
 has stopped.
 
 Here's an example of a bash script, `control-status.sh`, that could be used to set the status of a
 given resource as `up` when its server is started and `down` when stopped.
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
-Resc="$1"
+resc="$1"
 
 case "$2" in
   after_start)
-    iadmin modresc "$Resc" status up
+    iadmin modresc "$resc" status up
     ;;
   before_stop)
-    iadmin modresc "$Resc" status down
+    iadmin modresc "$resc" status down
     ;;
   *)
     ;;
@@ -70,26 +71,22 @@ RUN chmod +x /control-status.sh
 CMD [ "/control-status.sh", "CoordRes" ]
 ```
 
-
 ## Building the Base Image
 
 The command `./build` can be used to build the image.
 
 Each time an image is built, it is tagged with the iRODS version and the UTC time when the build
 started separated by an underscore. The tag has an ISO 8601 style form
-_**yyyy**-**MM**-**dd**T**hh**-**mm**-**ss**_ where _**yyyy**_ is the four digit year, _**MM**_ is
-the two digit month of the year number, _**dd**__ is the two digit day of the month number,
-_**hh**_ is the two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and
-_**ss**_ is the two digit seconds past the minute. Here's an example tag:
-`4.2.8_2021-06-11T21-46-59`. The latest version of an image for a given iRODS version will be tagged
-with the iRODS version.
+_`YYYY`_`-`_`MM`_`-`_`DD`_`T`_`hh`_`-`_`mm`_`-`_`ss`_ where _YYYY_ is the four digit year, _MM_ is
+the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the
+two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and _ss_ is the two
+digit seconds past the minute. Here's an example tag: `4.2.8_2021-06-11T21-46-59`. The latest
+version of an image for a given iRODS version will be tagged with the iRODS version.
 
-```
+```console
 prompt> date -u
 Fri Jun 11 21:47:20 UTC 2021
-
 prompt> ./build
-
 prompt> docker images
 REPOSITORY      TAG                         IMAGE ID       CREATED          SIZE
 cyverse/irods   4.2.8                       01c7f4dda2c9   11 seconds ago   454MB

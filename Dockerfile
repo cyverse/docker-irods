@@ -1,39 +1,44 @@
-FROM centos:7
+FROM ubuntu:18.04
 
+### Update installed packages to latest version
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get --quiet update && \
+	apt-get --quiet --yes install apt-utils && \
+	apt-get --quiet --yes upgrade && \
+#
 ### Install dumb-init
-ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 \
-    /usr/local/bin/dumb-init
-RUN chmod +x /usr/local/bin/dumb-init
-
+	apt-get --quiet --yes install dumb-init && \
+	apt-get clean && \
+#
 ### Install iRODS resource server
-ADD https://packages.irods.org/renci-irods.yum.repo /etc/yum.repos.d/renci-irods.yum.repo
-RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
-    rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
-    yum --assumeyes install epel-release && \
-    rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7 && \
-    yum --assumeyes install irods-server-4.2.8 && \
-### Installing undocumented 4.2.8 dependency, unixODBC
-    yum --assumeyes install unixODBC && \
+	adduser --group --quiet --system \
+		--gecos 'iRODS Administrator' --home /var/lib/irods --shell /bin/bash \
+		irods
+COPY apt.irods /etc/apt/preferences.d/irods
+ADD https://packages.irods.org/irods-signing-key.asc /tmp/irods-signing-key.asc
+RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
+	apt-key add /tmp/irods-signing-key.asc && \
+	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
+		> /etc/apt/sources.list.d/renci-irods.list && \
+	apt-get --quiet update && \
+	apt-get --quiet --yes install irods-server && \
+#
 ### Install iRODS management script dependencies
-    yum --assumeyes install jq sysvinit-tools && \
-### Clear yum cache for smaller image
-    yum --assumeyes clean all && \
-    rm --force --recursive /var/cache/yum && \
+	apt-get --quiet --yes install jq && \
+	apt-get clean && \
+#
 ### Initialize server
-    adduser --system --comment 'iRODS Administrator' --home-dir /var/lib/irods --shell /bin/bash \
-      irods && \
-    jq ".installation_time |= \"$(date '+%Y-%m-%dT%T.%6N')\"" /var/lib/irods/VERSION.json.dist \
-      > /var/lib/irods/VERSION.json && \
-    mkdir /var/lib/irods/.irods && \
-    chown --recursive irods:irods /etc/irods /var/lib/irods
+	jq ".installation_time |= \"$(date '+%Y-%m-%dT%T.%6N')\"" /var/lib/irods/version.json.dist \
+		> /var/lib/irods/version.json && \
+	mkdir /var/lib/irods/.irods && \
+	chown --recursive irods:irods /var/lib/irods
 
 ### Install iRODS management script
 COPY run-irods.sh /run-irods
 RUN chown irods:irods /run-irods && \
-    chmod ug+x /run-irods
+	chmod ug+x /run-irods
 
 WORKDIR /var/lib/irods
-
 USER irods
 
 ENV IRODS_CLERVER_PASSWORD=rods

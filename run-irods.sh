@@ -40,7 +40,6 @@ declare PERIPHERY_EXEC
 
 declare TailPid
 
-
 main() {
   if [[ "$#" -ge 1 ]]
   then
@@ -79,11 +78,9 @@ main() {
   done
 }
 
-
 configured() {
   [[ -e /etc/irods/server_config.json ]] && [[ -e /var/lib/irods/.irods/irods_environment.json ]]
 }
-
 
 init_clerver_session() {
   local provider="$1"
@@ -91,13 +88,11 @@ init_clerver_session() {
   IRODS_HOST="$provider" iinit "$IRODS_CLERVER_PASSWORD"
 }
 
-
 start_server() {
   call_periphery before_start
   /var/lib/irods/irodsctl start
   call_periphery after_start
 }
-
 
 stop_server() {
   call_periphery before_stop
@@ -113,7 +108,6 @@ stop_server() {
   fi
 }
 
-
 call_periphery() {
   local cmd="$1"
 
@@ -123,11 +117,9 @@ call_periphery() {
   fi
 }
 
-
 am_provider() {
   [[ "$(query_server_config .plugin_configuration.database)" != null ]]
 }
-
 
 wait_for_provider() {
   local zonePort
@@ -154,12 +146,10 @@ wait_for_provider() {
   done
 }
 
-
 query_server_config() {
   local query="$1"
 
   jq -r "$query" /etc/irods/server_config.json
 }
-
 
 main "$@"

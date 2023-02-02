@@ -5,28 +5,30 @@
 #
 # This program builds the cyverse/irods image. Each build is tagged with the
 # iRODS version and ISO 8601 style build time with the form `version_time`,
-# e.g., `4.2.8_2021-06-11T21-46-59'.
+# e.g., `4.2.11_2023-01-27T21-16-00`.
 #
 # Options:
 #  -p, --push  push the new image to Dockerhub
 
 set -o errexit -o nounset -o pipefail
 
-ExecPath=$(readlink --canonicalize "$0")
-ExecName=$(basename "$ExecPath")
-BaseDir=$(dirname "$ExecPath")
-readonly ExecPath ExecName BaseDir
+EXEC_PATH=$(readlink --canonicalize "$0")
+readonly EXEC_PATH
 
-readonly IrodsRelease=4.2.8
+EXEC_NAME=$(basename "$EXEC_PATH")
+BASE_DIR=$(dirname "$EXEC_PATH")
+readonly EXEC_NAME BASE_DIR
 
-readonly Repo=cyverse
-readonly ImageName=irods
+readonly IRODS_RELEASE=4.2.11
+
+readonly REPO=cyverse
+readonly IMAGE_NAME=irods
 
 
 main()
 {
   local opts
-  if ! opts=$(getopt --longoptions push --name "$ExecName" --options p -- "$@")
+  if ! opts=$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")
   then
     printf 'failed to parse command line\n' >&2
     return 1
@@ -57,15 +59,15 @@ main()
   local now
   now=$(date --utc '+%Y-%m-%dT%H-%M-%S')
 
-  local currentImage="$Repo"/"$ImageName":"$IrodsRelease"
-  local newImage="$Repo"/"$ImageName":"$IrodsRelease"_"$now"
+  local currentImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"
+  local newImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"_"$now"
 
   docker pull "$currentImage" 2> /dev/null || true
 
   local currentId
   currentId=$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id) || true
 
-  docker build --tag "$newImage" "$BaseDir"
+  docker build --tag "$newImage" "$BASE_DIR"
 
   local newId
   newId=$(docker image inspect "$newImage" | jq .[0].Id)

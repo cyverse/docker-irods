@@ -46,14 +46,14 @@ given resource as `up` when its server is started and `down` when stopped.
 resc="$1"
 
 case "$2" in
-  after_start)
-    iadmin modresc "$resc" status up
-    ;;
-  before_stop)
-    iadmin modresc "$resc" status down
-    ;;
-  *)
-    ;;
+   after_start)
+      iadmin modresc "$resc" status up
+      ;;
+   before_stop)
+      iadmin modresc "$resc" status down
+      ;;
+   *)
+      ;;
 esac
 ```
 
@@ -61,7 +61,7 @@ Here's a snippet from the derived image's Dockerfile showing how the bash script
 the entry point.
 
 ```Dockerfile
-FROM cyverse/irods:4.2.8
+FROM cyverse/irods:4.2.11
 
 ### other stuff
 
@@ -80,18 +80,18 @@ started separated by an underscore. The tag has an ISO 8601 style form
 _`YYYY`_`-`_`MM`_`-`_`DD`_`T`_`hh`_`-`_`mm`_`-`_`ss`_ where _YYYY_ is the four digit year, _MM_ is
 the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the
 two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and _ss_ is the two
-digit seconds past the minute. Here's an example tag: `4.2.8_2021-06-11T21-46-59`. The latest
+digit seconds past the minute. Here's an example tag: `4.2.11_2023-01-27T21-31-00`. The latest
 version of an image for a given iRODS version will be tagged with the iRODS version.
 
 ```console
 prompt> date -u
-Fri Jun 11 21:47:20 UTC 2021
+Fri Jan 27 21:29:21 UTC 2023
 prompt> ./build
 prompt> docker images
-REPOSITORY      TAG                         IMAGE ID       CREATED          SIZE
-cyverse/irods   4.2.8                       01c7f4dda2c9   11 seconds ago   454MB
-cyverse/irods   4.2.8_2021-06-11T21-46-59   01c7f4dda2c9   11 seconds ago   454MB
-centos          7                           8652b9f0cb4c   6 months ago     204MB
+REPOSITORY      TAG                          IMAGE ID       CREATED          SIZE
+cyverse/irods   4.2.11                       601811f20fa4   10 seconds ago   504MB
+cyverse/irods   4.2.11_2023-01-27T21-31-00   601811f20fa4   10 seconds ago   504MB
+ubuntu          18.04                        e28a50f651f9   3 weeks ago      63.1MB
 ```
 
 If the `-p` or `--push` option is provided to `build`, the image will be pushed to Dockerhub if a

@@ -10,7 +10,7 @@ RUN apt-get --quiet update && \
 	apt-get --quiet --yes install dumb-init && \
 	apt-get clean && \
 #
-### Install iRODS resource server
+### Install iRODS server
 	adduser --group --quiet --system \
 		--gecos 'iRODS Administrator' --home /var/lib/irods --shell /bin/bash \
 		irods

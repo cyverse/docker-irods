@@ -12,11 +12,11 @@
 
 set -o errexit -o nounset -o pipefail
 
-EXEC_PATH=$(readlink --canonicalize "$0")
+EXEC_PATH="$(readlink --canonicalize "$0")"
 readonly EXEC_PATH
 
-EXEC_NAME=$(basename "$EXEC_PATH")
-BASE_DIR=$(dirname "$EXEC_PATH")
+EXEC_NAME="$(basename "$EXEC_PATH")"
+BASE_DIR="$(dirname "$EXEC_PATH")"
 readonly EXEC_NAME BASE_DIR
 
 readonly IRODS_RELEASE=4.2.11
@@ -28,7 +28,7 @@ readonly IMAGE_NAME=irods
 main()
 {
   local opts
-  if ! opts=$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")
+  if ! opts="$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")"
   then
     printf 'failed to parse command line\n' >&2
     return 1
@@ -57,7 +57,7 @@ main()
   done
 
   local now
-  now=$(date --utc '+%Y-%m-%dT%H-%M-%S')
+  now="$(date --utc '+%Y-%m-%dT%H-%M-%S')"
 
   local currentImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"
   local newImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"_"$now"
@@ -65,12 +65,12 @@ main()
   docker pull "$currentImage" 2> /dev/null || true
 
   local currentId
-  currentId=$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id) || true
+  currentId="$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id)" || true
 
   docker build --tag "$newImage" "$BASE_DIR"
 
   local newId
-  newId=$(docker image inspect "$newImage" | jq .[0].Id)
+  newId="$(docker image inspect "$newImage" | jq .[0].Id)"
 
   if [[ "$newId" != "${currentId-}" ]]
   then

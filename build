@@ -5,7 +5,7 @@
 #
 # This program builds the cyverse/irods image. Each build is tagged with the
 # iRODS version and ISO 8601 style build time with the form `version_time`,
-# e.g., `4.2.11_2023-01-27T21-16-00`.
+# e.g., `4.2.12_2023-06-18T12-32-00`.
 #
 # Options:
 #  -p, --push  push the new image to Dockerhub
@@ -19,7 +19,7 @@ EXEC_NAME="$(basename "$EXEC_PATH")"
 BASE_DIR="$(dirname "$EXEC_PATH")"
 readonly EXEC_NAME BASE_DIR
 
-readonly IRODS_RELEASE=4.2.11
+readonly IRODS_RELEASE='4.2.12'
 
 readonly REPO=cyverse
 readonly IMAGE_NAME=irods

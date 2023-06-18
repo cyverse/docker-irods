@@ -43,4 +43,4 @@ USER irods
 
 ENV IRODS_CLERVER_PASSWORD=rods
 
-ENTRYPOINT [ "/usr/local/bin/dumb-init", "--", "/run-irods" ]
+ENTRYPOINT [ "/usr/bin/dumb-init", "--", "/run-irods" ]

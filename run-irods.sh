@@ -85,7 +85,7 @@ configured() {
 init_clerver_session() {
   local provider="$1"
 
-  IRODS_HOST="$provider" iinit "$IRODS_CLERVER_PASSWORD"
+  IRODS_HOST="$provider" iinit <<< "$IRODS_CLERVER_PASSWORD" > /dev/null
 }
 
 start_server() {
@@ -111,7 +111,7 @@ stop_server() {
 call_periphery() {
   local cmd="$1"
 
-  if [[ -n "$PERIPHERY_EXEC" ]]
+  if [[ -n "${PERIPHERY_EXEC-}" ]]
   then
     eval "$PERIPHERY_EXEC" "$cmd"
   fi

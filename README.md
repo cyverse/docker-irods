@@ -1,44 +1,23 @@
 # docker-irods
 
-This repository has the source for a Docker image intended to be a base image for an iRODS server.
-It creates the image that can be found on Dockerhub at `cyverse/irods`.
+This repository has the source for a Docker image intended to be a base image for an iRODS server. It creates the image that can be found on Dockerhub at `cyverse/irods`.
 
 ## Design
 
-This image is intended to be a base image. I.e., it is not intended to have containers instantiated
-from it directly. As a consequence, exposing volumes and ports is left to the derived images.
-Likewise, no configuration files have been modified from their defaults.
+This image is intended to be a base image. I.e., it is not intended to have containers instantiated from it directly. As a consequence, exposing volumes and ports is left to the derived images. Likewise, no configuration files have been modified from their defaults.
 
-The image defines one environment variable to hold the password of the clerver user,
-`IRODS_CLERVER_PASSWORD`. It sets the value to `rods`. It is needed by the entry point to
-initialize the authentication file, since this file cannot be in the image.
+The image defines one environment variable to hold the password of the clerver user, `IRODS_CLERVER_PASSWORD`. It sets the value to `rods`. It is needed by the entry point to initialize the authentication file, since this file cannot be in the image.
 
-The entry point starts and stops the iRODS service. On start, if it's a catalog consumer, it waits
-until a catalog provider can be detected before authenticating the clerver user and start the iRODS
-service. This means that bringing up the consumer need not wait for the provider to be running. The
-entry point traps `SIGTERM` passed down from Docker and stops the service before shutting down.
-Using a `CMD` instruction, a derived image can pass in an executable that the entry point will call
-before and after both starting and stopping the service.
+The entry point starts and stops the iRODS service. On start, if it's a catalog consumer, it waits until a catalog provider can be detected before authenticating the clerver user and start the iRODS service. This means that bringing up the consumer need not wait for the provider to be running. The entry point traps `SIGTERM` passed down from Docker and stops the service before shutting down. Using a `CMD` instruction, a derived image can pass in an executable that the entry point will call before and after both starting and stopping the service.
 
-The entry point allows for an executable to be provided by a derived image through a `CMD`
-instruction in its Dockerfile. This executable must accept four commands as its last argument.
-These commands tell the executable the current stage of the service's execution. Here are the
-commands.
+The entry point allows for an executable to be provided by a derived image through a `CMD` instruction in its Dockerfile. This executable must accept four commands as its last argument. These commands tell the executable the current stage of the service's execution. Here are the commands.
 
-* `before_start` - The executable is called with this before the iRODS service is started. If it's a
-catalog consumer, catalog provider detection occurs afterwards. This allows the container to perform
-any setup operations that need to occur before the iRODS service is started.
-* `after_start` - The executable is called with this after the iRODS service is started. This allows
-the container to perform any setup operations that need to occur when the service is running.
-* `before_stop` - The executable is called with this before the iRODS service is stopped. This
-allows the container to perform any tear down operations that need to occur when the service is
-running.
-* `after_stop` - The executable is called with this argument after the iRODS service has stopped.
-This allows the container to perform any tear down operations that need to occur after the service
-has stopped.
+* `before_start` - The executable is called with this before the iRODS service is started. If it's a catalog consumer, catalog provider detection occurs afterwards. This allows the container to perform any setup operations that need to occur before the iRODS service is started.
+* `after_start` - The executable is called with this after the iRODS service is started. This allows the container to perform any setup operations that need to occur when the service is running.
+* `before_stop` - The executable is called with this before the iRODS service is stopped. This allows the container to perform any tear down operations that need to occur when the service is running.
+* `after_stop` - The executable is called with this argument after the iRODS service has stopped. This allows the container to perform any tear down operations that need to occur after the service has stopped.
 
-Here's an example of a bash script, `control-status.sh`, that could be used to set the status of a
-given resource as `up` when its server is started and `down` when stopped.
+Here's an example of a bash script, `control-status.sh`, that could be used to set the status of a given resource as `up` when its server is started and `down` when stopped.
 
 ```bash
 #!/usr/bin/env bash
@@ -57,11 +36,10 @@ case "$2" in
 esac
 ```
 
-Here's a snippet from the derived image's Dockerfile showing how the bash script can be provided to
-the entry point.
+Here's a snippet from the derived image's Dockerfile showing how the bash script can be provided to the entry point.
 
 ```Dockerfile
-FROM cyverse/irods:4.2.11
+FROM cyverse/irods:4.2.12
 
 ### other stuff
 
@@ -75,24 +53,17 @@ CMD [ "/control-status.sh", "CoordRes" ]
 
 The command `./build` can be used to build the image.
 
-Each time an image is built, it is tagged with the iRODS version and the UTC time when the build
-started separated by an underscore. The tag has an ISO 8601 style form
-_`YYYY`_`-`_`MM`_`-`_`DD`_`T`_`hh`_`-`_`mm`_`-`_`ss`_ where _YYYY_ is the four digit year, _MM_ is
-the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the
-two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and _ss_ is the two
-digit seconds past the minute. Here's an example tag: `4.2.11_2023-01-27T21-31-00`. The latest
-version of an image for a given iRODS version will be tagged with the iRODS version.
+Each time an image is built, it is tagged with the iRODS version and the UTC time when the build started separated by an underscore. The tag has an ISO 8601 style form _`YYYY`_`-`_`MM`_`-`_`DD`_`T`_`hh`_`-`_`mm`_`-`_`ss`_ where _YYYY_ is the four digit year, _MM_ is the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and _ss_ is the two digit seconds past the minute. Here's an example tag: `4.2.12_2023-06-18T19-35-08`. The latest version of an image for a given iRODS version will be tagged with the iRODS version.
 
 ```console
-prompt> date -u
-Fri Jan 27 21:29:21 UTC 2023
+prompt> date --utc
+Sun Jun 18 19:34:57 UTC 2023
 prompt> ./build
 prompt> docker images
 REPOSITORY      TAG                          IMAGE ID       CREATED          SIZE
-cyverse/irods   4.2.11                       601811f20fa4   10 seconds ago   504MB
-cyverse/irods   4.2.11_2023-01-27T21-31-00   601811f20fa4   10 seconds ago   504MB
-ubuntu          18.04                        e28a50f651f9   3 weeks ago      63.1MB
+cyverse/irods   4.2.12                       376ead64b96b   10 seconds ago   504MB
+cyverse/irods   4.2.12_2023-06-18T19-35-08   376ead64b96b   10 seconds ago   504MB
+ubuntu          18.04                        3941d3b032a8   3 months ago     63.1MB
 ```
 
-If the `-p` or `--push` option is provided to `build`, the image will be pushed to Dockerhub if a
-new image was created.
+If the `-p` or `--push` option is provided to `build`, the image will be pushed to Dockerhub if a new image was created.

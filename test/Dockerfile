@@ -1,10 +1,10 @@
-FROM cyverse/irods:4.2.11
-
-COPY unattended_installation.json /tmp
+FROM cyverse/irods:4.2.12
 
 USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+COPY unattended_installation.json /tmp
 
 RUN apt-get --quiet update && \
 	apt-get --quiet --yes upgrade && \
@@ -27,4 +27,13 @@ RUN apt-get --quiet update && \
 		/usr/lib/postgresql/10/bin/pg_ctl --pgdata=/var/lib/postgresql/10/main stop && \
 	rm /tmp/unattended_installation.json
 
+### Install DBMS management script
+COPY control-dbms.sh /control-dbms
+
+RUN chown irods:irods /control-dbms && \
+	chmod ug+x /control-dbms && \
+	echo 'irods ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/irods
+
 USER irods
+
+CMD [ "/control-dbms" ]

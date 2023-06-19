@@ -41,115 +41,105 @@ declare PERIPHERY_EXEC
 declare TailPid
 
 main() {
-  if [[ "$#" -ge 1 ]]
-  then
-    PERIPHERY_EXEC="$*"
-  fi
-  readonly PERIPHERY_EXEC
+	readonly PERIPHERY_EXEC="$*"
 
-  if ! configured
-  then
-    printf 'iRODS isn not configured. Exiting\n' >&2
-    return 1
-  fi
+	if ! configured; then
+		printf 'iRODS isn not configured. Exiting\n' >&2
+		return 1
+	fi
 
-  if am_provider
-  then
-    printf 'Starting catalog provider\n'
-    start_server
-    init_clerver_session localhost
-  else
-    printf 'Starting catalog consumer\n'
-    init_clerver_session "$(wait_for_provider)"
-    start_server
-  fi
+	if am_provider; then
+		printf 'Starting catalog provider\n'
+		start_server
+		init_clerver_session localhost
+	else
+		printf 'Starting catalog consumer\n'
+		init_clerver_session "$(wait_for_provider)"
+		start_server
+	fi
 
-  trap stop_server SIGTERM
+	trap stop_server SIGTERM
 
-  printf 'Ready\n'
+	printf 'Ready\n'
 
-  local irodsPid
-  while irodsPid=$(pidof -s /usr/sbin/irodsServer)
-  do
-    tail --follow /dev/null --pid "$irodsPid" &
-    TailPid="$!"
-    wait "$TailPid"
-    TailPid=
-  done
+	local irodsPid
+	while irodsPid="$(pidof -s /usr/sbin/irodsServer)"; do
+		tail --follow /dev/null --pid "$irodsPid" &
+		TailPid="$!"
+		wait "$TailPid"
+		unset TailPid
+	done
 }
 
 configured() {
-  [[ -e /etc/irods/server_config.json ]] && [[ -e /var/lib/irods/.irods/irods_environment.json ]]
+	[[ -e /etc/irods/server_config.json ]] && [[ -e /var/lib/irods/.irods/irods_environment.json ]]
 }
 
 init_clerver_session() {
-  local provider="$1"
+	local provider="$1"
 
-  IRODS_HOST="$provider" iinit <<< "$IRODS_CLERVER_PASSWORD" > /dev/null
+	IRODS_HOST="$provider" iinit <<< "$IRODS_CLERVER_PASSWORD" > /dev/null
 }
 
 start_server() {
-  call_periphery before_start
-  /var/lib/irods/irodsctl start
-  call_periphery after_start
+	call_periphery before_start
+	/var/lib/irods/irodsctl start
+	call_periphery after_start
 }
 
 stop_server() {
-  call_periphery before_stop
-  /var/lib/irods/irodsctl stop
-  call_periphery after_stop
+	call_periphery before_stop
+	/var/lib/irods/irodsctl stop
+	call_periphery after_stop
 
-  if [[ -n "$TailPid" ]]
-  then
-    if kill "$TailPid" 2> /dev/null
-    then
-      wait "$TailPid"
-    fi
-  fi
+	if [[ -n "${TailPid-}" ]]; then
+		if kill "$TailPid" 2> /dev/null; then
+			wait "$TailPid"
+		fi
+	fi
 }
 
 call_periphery() {
-  local cmd="$1"
+	local cmd="$1"
 
-  if [[ -n "${PERIPHERY_EXEC-}" ]]
-  then
-    eval "$PERIPHERY_EXEC" "$cmd"
-  fi
+	if [[ -n "${PERIPHERY_EXEC-}" ]]; then
+		eval "$PERIPHERY_EXEC" "$cmd"
+	fi
 }
 
 am_provider() {
-  [[ "$(query_server_config .plugin_configuration.database)" != null ]]
+	[[ "$(query_server_config .plugin_configuration.database)" != null ]]
 }
 
 wait_for_provider() {
-  local zonePort
-  zonePort="$(query_server_config .zone_port)"
+	local zonePort
+	zonePort="$(query_server_config .zone_port)"
 
-  # Wait for a provider to become available
-  while true
-  do
-    local provider
-    for provider in $(query_server_config '.catalog_provider_hosts | .[]')
-    do
-      printf 'Waiting for a provider\n' >&2
+	# Wait for a provider to become available
+	while true; do
+		local providers
+		readarray -t providers <<< "$(query_server_config '.catalog_provider_hosts | .[]')"
 
-      if exec 3<> /dev/tcp/"$provider"/"$zonePort" 2> /dev/null
-      then
-        exec 3>&-
-        exec 3<&-
-        echo "$provider"
-        return
-      fi
-    done
+		local provider
+		for provider in "${providers[@]}" ; do
+			printf 'Waiting for a provider\n' >&2
 
-    sleep 1
-  done
+			if exec 3<> /dev/tcp/"$provider"/"$zonePort" 2> /dev/null; then
+				exec 3>&-
+				exec 3<&-
+				echo "$provider"
+				return
+			fi
+		done
+
+		sleep 1
+	done
 }
 
 query_server_config() {
-  local query="$1"
+	local query="$1"
 
-  jq -r "$query" /etc/irods/server_config.json
+	jq -r "$query" /etc/irods/server_config.json
 }
 
 main "$@"

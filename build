@@ -24,67 +24,60 @@ readonly IRODS_RELEASE='4.2.12'
 readonly REPO=cyverse
 readonly IMAGE_NAME=irods
 
+main() {
+	local opts
+	if ! opts="$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")"; then
+		printf 'failed to parse command line\n' >&2
+		return 1
+	fi
 
-main()
-{
-  local opts
-  if ! opts="$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")"
-  then
-    printf 'failed to parse command line\n' >&2
-    return 1
-  fi
+	eval set -- "$opts"
 
-  eval set -- "$opts"
+	local push
 
-  local push=0
+	while true; do
+		case "$1" in
+			-p|--push)
+				push=push
+				shift
+				;;
+			--)
+				shift
+				break
+				;;
+	 		*)
+				printf 'unknown option: %s\n' "$1" >&2
+				return 1
+				;;
+		esac
+	done
 
-  while true
-  do
-    case "$1" in
-      -p|--push)
-        push=1
-        shift
-        ;;
-      --)
-        shift
-        break
-        ;;
-      *)
-        printf 'unknown option: %s\n' "$1" >&2
-        return 1
-        ;;
-    esac
-  done
+	local now
+	now="$(date --utc '+%Y-%m-%dT%H-%M-%S')"
 
-  local now
-  now="$(date --utc '+%Y-%m-%dT%H-%M-%S')"
+	local currentImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"
+	local newImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"_"$now"
 
-  local currentImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"
-  local newImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"_"$now"
+	docker pull "$currentImage" 2> /dev/null || true
 
-  docker pull "$currentImage" 2> /dev/null || true
+	local currentId
+	currentId="$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id)" || true
 
-  local currentId
-  currentId="$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id)" || true
+	docker build --tag "$newImage" "$BASE_DIR"
 
-  docker build --tag "$newImage" "$BASE_DIR"
+	local newId
+	newId="$(docker image inspect "$newImage" | jq .[0].Id)"
 
-  local newId
-  newId="$(docker image inspect "$newImage" | jq .[0].Id)"
+	if [[ "$newId" != "${currentId-}" ]]; then
+		docker tag "$newImage" "$currentImage"
 
-  if [[ "$newId" != "${currentId-}" ]]
-  then
-    docker tag "$newImage" "$currentImage"
-
-    if [[ "$push" -ne 0 ]]
-    then
-      docker push "$newImage"
-      docker push "$currentImage"
-    fi
-  else
-    docker rmi "$newImage"
-  fi
+		if [[ -n "${push-}" ]]; then
+			docker push "$newImage"
+			docker push "$currentImage"
+		fi
+	else
+		docker rmi "$newImage"
+	fi
 }
-
 
 main "$@"

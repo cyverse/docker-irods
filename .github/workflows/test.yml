@@ -5,11 +5,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: get current date and time
+        id: time
+        run: echo "::set-output name=time::$(date --utc '+%Y-%m-%dT%H-%M-%S')"
+
       - name: build base image
         uses: docker/build-push-action@v4
         with:
           push: false
-          tags: cyverse/irods:4.2.12
+          tags: cyverse/irods:4.2.12_${{ steps.time.outputs.time }}
 
       # - name: build test image
       #   uses: docker/build-push-action@v4

@@ -16,9 +16,9 @@ jobs:
 #          tags: cyverse/irods:4.2.12_${{ steps.timestamp.outputs.TIMESTAMP }}
           tags: cyverse/irods:4.2.12
 
-      # - name: build test image
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: test
-      #     push: false
-      #     tags: test:latest
+      - name: build test image
+        uses: docker/build-push-action@v4
+        with:
+          context: test
+          push: false
+          tags: test:latest

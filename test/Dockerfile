@@ -1,4 +1,4 @@
-FROM cyverse/irods:4.2.12
+FROM cyverse/irods:latest
 
 USER root
 

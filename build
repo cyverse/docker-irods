@@ -3,81 +3,15 @@
 # Usage:
 #  build [options]
 #
-# This program builds the cyverse/irods image. Each build is tagged with the
-# iRODS version and ISO 8601 style build time with the form `version_time`,
-# e.g., `4.2.12_2023-06-18T12-32-00`.
-#
-# Options:
-#  -p, --push  push the new image to Dockerhub
+# This program builds the cyverse/irods image tagged with `new`.
 
 set -o errexit -o nounset -o pipefail
 
-EXEC_PATH="$(readlink --canonicalize "$0")"
-readonly EXEC_PATH
-
-EXEC_NAME="$(basename "$EXEC_PATH")"
-BASE_DIR="$(dirname "$EXEC_PATH")"
-readonly EXEC_NAME BASE_DIR
-
-readonly IRODS_RELEASE='4.2.12'
-
-readonly REPO=cyverse
-readonly IMAGE_NAME=irods
+BASE_DIR="$(dirname "$(readlink --canonicalize "$0")")"
+readonly BASE_DIR
 
 main() {
-	local opts
-	if ! opts="$(getopt --longoptions push --name "$EXEC_NAME" --options p -- "$@")"; then
-		printf 'failed to parse command line\n' >&2
-		return 1
-	fi
-
-	eval set -- "$opts"
-
-	local push
-
-	while true; do
-		case "$1" in
-			-p|--push)
-				push=push
-				shift
-				;;
-			--)
-				shift
-				break
-				;;
-	 		*)
-				printf 'unknown option: %s\n' "$1" >&2
-				return 1
-				;;
-		esac
-	done
-
-	local now
-	now="$(date --utc '+%Y-%m-%dT%H-%M-%S')"
-
-	local currentImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"
-	local newImage="$REPO"/"$IMAGE_NAME":"$IRODS_RELEASE"_"$now"
-
-	docker pull "$currentImage" 2> /dev/null || true
-
-	local currentId
-	currentId="$(docker image inspect "$currentImage" 2> /dev/null | jq .[0].Id)" || true
-
-	docker build --tag "$newImage" "$BASE_DIR"
-
-	local newId
-	newId="$(docker image inspect "$newImage" | jq .[0].Id)"
-
-	if [[ "$newId" != "${currentId-}" ]]; then
-		docker tag "$newImage" "$currentImage"
-
-		if [[ -n "${push-}" ]]; then
-			docker push "$newImage"
-			docker push "$currentImage"
-		fi
-	else
-		docker rmi "$newImage"
-	fi
+	docker build --tag cyverse/irods:new "$BASE_DIR"
 }
 
 main "$@"

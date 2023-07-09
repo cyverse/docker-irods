@@ -14,10 +14,8 @@ jobs:
         run: ${{ github.repository }}/build
 
       - name: build test image
-        # run: docker buildx build "${{ github.repository }}"/test
-        run: echo NOT IMPLEMENTED
+        run: docker buildx build "${{ github.repository }}"/test
 
       - name: publish base image
         if: ${{ github.ref_name == 'main' }}
-        # run: ${{ github.repository }}/build --push
-        run: echo NOT IMPLEMENTED
+        run: ${{ github.repository }}/publish

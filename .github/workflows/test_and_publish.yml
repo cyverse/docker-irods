@@ -1,5 +1,5 @@
 ---
-name: Test
+name: test and publish
 on: [ push, pull_request, workflow_dispatch ]
 jobs:
   build:
@@ -10,6 +10,12 @@ jobs:
         with:
           push: false
           tags: cyverse/irods:latest
+
+      - name: where am i
+        run: pwd
+
+      - name: what is here
+        run: ls -a
 
       - name: build test image
         run: docker buildx build test

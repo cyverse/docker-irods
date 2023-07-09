@@ -12,11 +12,7 @@ jobs:
           tags: cyverse/irods:latest
 
       - name: build test image
-        uses: docker/build-push-action@v4
-        with:
-          context: "{{ defaultContext }}:test"
-          push: false
-          tags: test:latest
+        run: docker buildx build test
 
       # - name: publish base image
       #   if: ${{ github.ref_name == 'main' }}

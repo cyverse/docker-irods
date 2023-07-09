@@ -2,14 +2,22 @@
 name: test and publish
 on: [ push, pull_request, workflow_dispatch ]
 jobs:
-  build:
+  build_test_publish:
     runs-on: ubuntu-latest
     steps:
-      - name: build base image
-        uses: docker/build-push-action@v4
+      - name: checkout repo
+        uses: actions/checkout@v3
         with:
-          push: false
-          tags: cyverse/irods:latest
+          path: "${{ github.repository }}"
+
+      - name: build base image
+        run: docker buildx build --tag cyverse/irods:latest .
+
+      # - name: build base image
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     push: false
+      #     tags: cyverse/irods:latest
 
       - name: where am i
         run: pwd

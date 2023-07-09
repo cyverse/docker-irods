@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 ### Update installed packages to latest version
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --quiet update && \
-	apt-get --quiet --yes install apt-utils && \
+	apt-get --quiet --yes install apt-utils 2>&1 && \
 	apt-get --quiet --yes upgrade && \
 #
 ### Install dumb-init

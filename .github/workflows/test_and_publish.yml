@@ -10,6 +10,12 @@ jobs:
         with:
           path: "${{ github.repository }}"
 
+      - name: where am i
+        run: pwd
+
+      - name: what is here
+        run: ls -a
+
       - name: build base image
         run: docker buildx build --tag cyverse/irods:latest .
 
@@ -18,12 +24,6 @@ jobs:
       #   with:
       #     push: false
       #     tags: cyverse/irods:latest
-
-      - name: where am i
-        run: pwd
-
-      - name: what is here
-        run: ls -a
 
       - name: build test image
         run: docker buildx build test

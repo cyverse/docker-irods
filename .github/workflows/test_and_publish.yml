@@ -11,11 +11,13 @@ jobs:
           path: "${{ github.repository }}"
 
       - name: build base image
-        run: docker buildx build --tag cyverse/irods:latest "${{ github.repository }}"
+        run: ${{ github.repository }}/build
 
       - name: build test image
-        run: docker buildx build "${{ github.repository }}"/test
+        # run: docker buildx build "${{ github.repository }}"/test
+        run: echo NOT IMPLEMENTED
 
-      # - name: publish base image
-      #   if: ${{ github.ref_name == 'main' }}
-      #   run: ./build --push
+      - name: publish base image
+        if: ${{ github.ref_name == 'main' }}
+        # run: ${{ github.repository }}/build --push
+        run: echo NOT IMPLEMENTED

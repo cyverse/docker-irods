@@ -10,20 +10,11 @@ jobs:
         with:
           path: "${{ github.repository }}"
 
-      - name: what is here
-        run: ls -a
-
       - name: build base image
         run: docker buildx build --tag cyverse/irods:latest "${{ github.repository }}"
 
-      # - name: build base image
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     push: false
-      #     tags: cyverse/irods:latest
-
       - name: build test image
-        run: docker buildx build test
+        run: docker buildx build "${{ github.repository }}/test
 
       # - name: publish base image
       #   if: ${{ github.ref_name == 'main' }}

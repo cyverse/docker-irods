@@ -8,16 +8,13 @@ RUN apt-get --quiet update && \
 #
 ### Install dumb-init
 	apt-get --quiet --yes install dumb-init && \
-	apt-get clean && \
-#
+	apt-get clean
+
 ### Install iRODS server
-	adduser --group --quiet --system \
-		--gecos 'iRODS Administrator' --home /var/lib/irods --shell /bin/bash \
-		irods
 COPY apt.irods /etc/apt/preferences.d/irods
 ADD https://packages.irods.org/irods-signing-key.asc /tmp/irods-signing-key.asc
 RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
-	apt-key add /tmp/irods-signing-key.asc && \
+	apt-key add /tmp/irods-signing-key.asc > /dev/null && \
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list && \
 	apt-get --quiet update && \
@@ -28,6 +25,9 @@ RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
 	apt-get clean && \
 #
 ### Initialize server
+	adduser --group --quiet --system \
+		--gecos 'iRODS Administrator' --home /var/lib/irods --shell /bin/bash \
+		irods && \
 	jq ".installation_time |= \"$(date '+%Y-%m-%dT%T.%6N')\"" /var/lib/irods/version.json.dist \
 		> /var/lib/irods/version.json && \
 	mkdir /var/lib/irods/.irods && \

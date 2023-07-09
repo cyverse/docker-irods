@@ -49,11 +49,11 @@ main() {
 	fi
 
 	if am_provider; then
-		printf 'Starting catalog provider\n'
+		printf 'Catalog Service Provider Instance\n'
 		start_server
 		init_clerver_session localhost
 	else
-		printf 'Starting catalog consumer\n'
+		printf 'Catalog Service Consumer Instance\n'
 		init_clerver_session "$(wait_for_provider)"
 		start_server
 	fi
@@ -83,12 +83,14 @@ init_clerver_session() {
 
 start_server() {
 	call_periphery before_start
+	printf 'Starting iRODS\n'
 	/var/lib/irods/irodsctl start
 	call_periphery after_start
 }
 
 stop_server() {
 	call_periphery before_stop
+	printf 'Stopping iRODS\n'
 	/var/lib/irods/irodsctl stop
 	call_periphery after_stop
 

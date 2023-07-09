@@ -14,7 +14,7 @@ RUN apt-get --quiet update && \
 COPY apt.irods /etc/apt/preferences.d/irods
 ADD https://packages.irods.org/irods-signing-key.asc /tmp/irods-signing-key.asc
 RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
-	apt-key add /tmp/irods-signing-key.asc > /dev/null && \
+	apt-key add /tmp/irods-signing-key.asc > 2>&1 && \
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list && \
 	apt-get --quiet update && \

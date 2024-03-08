@@ -41,7 +41,7 @@ esac
 Here's a snippet from the derived image's Dockerfile showing how the bash script can be provided to the entry point.
 
 ```Dockerfile
-FROM cyverse/irods:4.2.12
+FROM cyverse/irods:4.3.1
 
 ### other stuff
 
@@ -59,12 +59,12 @@ Each time an image is built, it is tagged with the iRODS version and the UTC tim
 
 ```console
 prompt> date --utc
-Sun Jun 18 19:34:57 UTC 2023
+Fri Mar 08 19:34:57 UTC 2024
 prompt> ./build
 prompt> docker images
 REPOSITORY      TAG                          IMAGE ID       CREATED          SIZE
-cyverse/irods   4.2.12                       376ead64b96b   10 seconds ago   504MB
-cyverse/irods   4.2.12_2023-06-18T19-35-08   376ead64b96b   10 seconds ago   504MB
+cyverse/irods   4.3.1                        376ead64b96b   10 seconds ago   504MB
+cyverse/irods   4.3.1_2024-03-08T19-35-08    376ead64b96b   10 seconds ago   504MB
 ubuntu          18.04                        3941d3b032a8   3 months ago     63.1MB
 ```
 

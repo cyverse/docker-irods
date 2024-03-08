@@ -9,12 +9,11 @@
 
 set -o errexit -o nounset -o pipefail
 
-readonly IRODS_RELEASE='4.2.12'
+readonly IRODS_RELEASE='4.3.1'
 
 readonly IMAGE_NAME=cyverse/irods
 readonly NEW_IMAGE="$IMAGE_NAME":new
 readonly CUR_IMAGE="$IMAGE_NAME":latest
-readonly VER_IMAGE="$IMAGE_NAME":"$IRODS_RELEASE"
 
 main() {
 	local newId

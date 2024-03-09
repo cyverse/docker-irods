@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 ### Update installed packages to latest version
 ARG DEBIAN_FRONTEND=noninteractive
@@ -17,9 +17,9 @@ RUN apt-get --quiet update && \
 		--gecos 'iRODS Administrator' --home /var/lib/irods --shell /bin/bash \
 		irods
 COPY apt.irods /etc/apt/preferences.d/irods
-ADD https://packages.irods.org/irods-signing-key.asc /tmp/irods-signing-key.asc
+ADD --chmod=444 \
+	https://packages.irods.org/irods-signing-key.asc /etc/apt/trusted.gpg.d/irods-signing-key.asc
 RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
-	apt-key add /tmp/irods-signing-key.asc 2>&1 && \
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list && \
 	apt-get --quiet update && \
@@ -36,9 +36,7 @@ RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
 	chown --recursive irods:irods /var/lib/irods
 
 ### Install iRODS management script
-COPY run-irods.sh /run-irods
-RUN chown irods:irods /run-irods && \
-	chmod ug+x /run-irods
+COPY --chown=irods:irods --chmod=550 run-irods.sh /run-irods
 
 WORKDIR /var/lib/irods
 USER irods

@@ -53,9 +53,18 @@ CMD [ "/control-status.sh", "CoordRes" ]
 
 ## Building the Base Image
 
-The command `./build` can be used to build the image.
+The command `./build` can be used to build the image. It creates the image `cyverse/irods` with tag `new`.
 
-Each time an image is built, it is tagged with the iRODS version and the UTC time when the build started separated by an underscore. The tag has an ISO 8601 style form _`YYYY`_`-`_`MM`_`-`_`DD`_`T`_`hh`_`-`_`mm`_`-`_`ss`_ where _YYYY_ is the four digit year, _MM_ is the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the two digit hour of the day, _**mm**_ is the two digit minutes past the hour, and _ss_ is the two digit seconds past the minute. Here's an example tag: `4.2.12_2023-06-18T19-35-08`. The latest version of an image for a given iRODS version will be tagged with the iRODS version.
+```console
+prompt> ./build
+prompt> docker images
+REPOSITORY     TAG          IMAGE ID       CREATED          SIZE
+cyverse/irods  new          5a27e7f8c547   10 seconds ago   484MB
+```
+
+## Publishing the Base Image
+
+The command `./publish` can be used to publish the image to Dockerhub. It publishes the image with three tags: _IRODS-VERSION_`_`_PUBLISH-TIMESTAMP_, _IRODS-VERSION_, and `latest`. _IRODS-VERSION_ is the _MAJOR_`.`_MINOR_`.`_INCREMENTAL_ version of iRODS in the image. _PUBLISH-TIMESTAMP_ is the UTC date and time when the image was published to Dockerhub in the ISO 8601 form _YYYY_`-`_MM_`-`_DD_`T`_hh_`-`_mm_`-`_ss_ where _YYYY_ is the four digit year, _MM_ is the two digit month of the year number, _DD_ is the two digit day of the month number, _hh_ is the two digit hour of the day, _mm_ is the two digit minutes past the hour, and _ss_ is the two digit seconds past the minute. Here's an example set of tagged images.
 
 ```console
 prompt> date --utc
@@ -63,9 +72,7 @@ Fri Mar 08 19:34:57 UTC 2024
 prompt> ./build
 prompt> docker images
 REPOSITORY      TAG                          IMAGE ID       CREATED          SIZE
-cyverse/irods   4.3.1                        376ead64b96b   10 seconds ago   504MB
-cyverse/irods   4.3.1_2024-03-08T19-35-08    376ead64b96b   10 seconds ago   504MB
-ubuntu          18.04                        3941d3b032a8   3 months ago     63.1MB
+cyverse/irods   latest                       5a27e7f8c547   12 minutes ago   484MB
+cyverse/irods   4.3.1                        5a27e7f8c547   12 minutes ago   484MB
+cyverse/irods   4.3.1_2024-03-08T19-35-08    5a27e7f8c547   12 minutes ago   484MB
 ```
-
-If the `-p` or `--push` option is provided to `build`, the image will be pushed to Dockerhub if a new image was created.

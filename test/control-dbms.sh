@@ -18,11 +18,11 @@ main() {
 start_dbms() {
 	printf 'Starting PostgreSQL\n'
 
-	sudo --user postgres \
-			/usr/lib/postgresql/10/bin/pg_ctl \
-				--log=/var/log/postgresql/postgresql-10-main.log \
-				--options='--config_file=/etc/postgresql/10/main/postgresql.conf' \
-				--pgdata=/var/lib/postgresql/10/main \
+	sudo --login --user=postgres \
+			/usr/lib/postgresql/14/bin/pg_ctl \
+				--log=/var/log/postgresql/postgresql-14-main.log \
+				--options='--config_file=/etc/postgresql/14/main/postgresql.conf' \
+				--pgdata=/var/lib/postgresql/14/main \
 				start \
 		> >(indent /dev/stdout) \
 		2> >(indent /dev/stderr)
@@ -31,8 +31,8 @@ start_dbms() {
 stop_dbms() {
 	printf 'Stopping PostgreSQL\n'
 
-	sudo --user postgres \
-			/usr/lib/postgresql/10/bin/pg_ctl --pgdata=/var/lib/postgresql/10/main stop \
+	sudo --login --user=postgres \
+			/usr/lib/postgresql/14/bin/pg_ctl --pgdata=/var/lib/postgresql/14/main stop \
 		> >(indent /dev/stdout) \
 		2> >(indent /dev/stderr)
 }

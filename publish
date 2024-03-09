@@ -4,8 +4,7 @@
 #  publish
 #
 # This program publishes the cyverse/irods image on Dockerhub. Each build is
-# tagged with `latest`, iRODS version, and ISO 8601 style build time with the
-# form `version_time`, e.g., `4.2.12_2023-06-18T12-32-00`.
+# tagged with `new`.
 
 set -o errexit -o nounset -o pipefail
 

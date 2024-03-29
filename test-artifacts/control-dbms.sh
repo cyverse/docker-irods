@@ -5,7 +5,14 @@ set -o errexit -o nounset -o pipefail
 main() {
 	case "$1" in
 		before_start)
+			resolve_irods_host
 			start_dbms
+			;;
+		after_start)
+			printf 'after_start received\n'
+			;;
+		before_stop)
+			printf 'before_stop received\n'
 			;;
 		after_stop)
 			stop_dbms
@@ -13,6 +20,18 @@ main() {
 		*)
 			;;
 	esac
+}
+
+resolve_irods_host() {
+	printf 'Resolving host name\n'
+
+	local host
+	host="$(hostname)"
+
+	jq '.irods_host |= "'"$host"'"' /var/lib/irods/.irods/irods_environment.json \
+		| sponge /var/lib/irods/.irods/irods_environment.json
+
+	indent /dev/stdout < /var/lib/irods/.irods/irods_environment.json
 }
 
 start_dbms() {

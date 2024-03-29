@@ -13,8 +13,8 @@ jobs:
       - name: build base image
         run: "${{ github.repository }}/build"
 
-      - name: build test image
-        run: docker buildx build "${{ github.repository }}"/test-artifacts
+      - name: test base image
+        run: "${{ github.repository }}/test"
 
       - name: log into Docker Hub
         if: ${{ github.ref_name == 'main' }}

@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# Usage:
+#  test
+#
+# This program tests the cyverse/irods base image by creating an image based on
+# it and verifying that iRODS is working on that image.
+
+set -o errexit -o nounset
+
+BASE_DIR="$(dirname "$(realpath --canonicalize-existing "$0")")"
+readonly BASE_DIR
+
+declare -rA PROG_MSGS=(
+	[before_start]='Resolving host name'
+	[after_start]='after_start received'
+	[before_stop]='before_stop received'
+	[after_stop]='Stopping PostgreSQL'
+)
+
+main() {
+	docker buildx build --tag test-image "$BASE_DIR"/test-artifacts
+	docker run --rm --name test-container test-image | test_container
+	printf 'PASSED\n'
+}
+
+test_container() {
+	local msgLine
+
+	verify_start_msg before_start
+	verify_start_msg after_start
+
+	while read -r msgLine; do
+		if [[ "$msgLine" == Ready ]]; then
+			break
+		fi
+	done
+
+	if [[ "$(docker exec test-container ./irodsctl status)" =~ 'No iRODS server running' ]]; then
+		printf 'iRODS failed to start\n' >&2
+		exit 1
+	fi
+
+	docker stop test-container > /dev/null
+
+	verify_stop_msg before_stop
+	verify_stop_msg after_stop
+}
+
+verify_start_msg() {
+	local state="$1"
+
+	local msgLine
+	while read -r msgLine; do
+		if [[ "$msgLine" ==  "${PROG_MSGS["$state"]}" ]]; then
+			break
+		fi
+
+		if [[ "$msgLine" == Ready ]]; then
+			printf '%s not triggered\n' "$state" >&2
+			exit 1
+		fi
+	done
+}
+
+verify_stop_msg() {
+	local state="$1"
+
+	local msgLine
+	while read -r msgLine; do
+		if [[ "$msgLine" == "${PROG_MSGS["$state"]}" ]]; then
+			return
+		fi
+	done
+
+	printf '%s not triggered\n' "$state" >&2
+	exit 1
+}
+
+main "$@"

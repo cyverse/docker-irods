@@ -36,7 +36,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-declare PERIPHERY_EXEC
+declare PERIPHERY_EXEC PERIPHERY_AFTER_STOP_CALLED
 
 declare TailPid
 
@@ -48,17 +48,10 @@ main() {
 		return 1
 	fi
 
-	if am_provider; then
-		printf 'Catalog Service Provider Instance\n'
-		start_server
-		init_clerver_session localhost
-	else
-		printf 'Catalog Service Consumer Instance\n'
-		init_clerver_session "$(wait_for_provider)"
-		start_server
-	fi
+	start_server
 
 	trap stop_server SIGTERM
+	trap 'call_periphery after_stop' EXIT
 
 	printf 'Ready\n'
 
@@ -75,24 +68,28 @@ configured() {
 	[[ -e /etc/irods/server_config.json ]] && [[ -e /var/lib/irods/.irods/irods_environment.json ]]
 }
 
-init_clerver_session() {
-	local provider="$1"
-
-	IRODS_HOST="$provider" iinit <<< "$IRODS_CLERVER_PASSWORD" > /dev/null
-}
-
 start_server() {
 	call_periphery before_start
 	printf 'Starting iRODS\n'
-	/var/lib/irods/irodsctl start
+
+	if am_provider; then
+		printf 'Catalog Service Provider Instance\n'
+		/var/lib/irods/irodsctl start
+		init_clerver_session "$(hostname)"
+	else
+		printf 'Catalog Service Consumer Instance\n'
+		init_clerver_session "$(wait_for_provider)"
+		/var/lib/irods/irodsctl start
+	fi
+
 	call_periphery after_start
 }
 
 stop_server() {
-	call_periphery before_stop
+	call_periphery before_stop || true
 	printf 'Stopping iRODS\n'
-	/var/lib/irods/irodsctl stop
-	call_periphery after_stop
+	/var/lib/irods/irodsctl stop || true
+	call_periphery after_stop || true
 
 	if [[ -n "${TailPid-}" ]]; then
 		if kill "$TailPid" 2> /dev/null; then
@@ -104,6 +101,14 @@ stop_server() {
 call_periphery() {
 	local cmd="$1"
 
+	if [[ "$cmd" == after_stop ]]; then
+		if [[ -n "${PERIPHERY_AFTER_STOP_CALLED-}" ]]; then
+			return
+		else
+			readonly PERIPHERY_AFTER_STOP_CALLED=called
+		fi
+	fi
+
 	if [[ -n "${PERIPHERY_EXEC-}" ]]; then
 		eval "$PERIPHERY_EXEC" "$cmd"
 	fi
@@ -111,6 +116,12 @@ call_periphery() {
 
 am_provider() {
 	[[ "$(query_server_config .plugin_configuration.database)" != null ]]
+}
+
+init_clerver_session() {
+	local provider="$1"
+
+	IRODS_HOST="$provider" iinit <<< "$IRODS_CLERVER_PASSWORD" > /dev/null
 }
 
 wait_for_provider() {

@@ -2,12 +2,12 @@ FROM ubuntu:22.04
 
 ### Update installed packages to latest version
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get --quiet update && \
-	apt-get --quiet --yes install apt-utils 2>&1 && \
-	apt-get --quiet --yes upgrade && \
+RUN apt-get update && \
+	apt-get --yes install apt-utils 2>&1 && \
+	apt-get --yes upgrade && \
 #
 ### Install dumb-init
-	apt-get --quiet --yes install dumb-init && \
+	apt-get --yes install dumb-init && \
 	apt-get clean && \
 #
 ### Install iRODS server
@@ -19,14 +19,14 @@ RUN apt-get --quiet update && \
 COPY apt.irods /etc/apt/preferences.d/irods
 ADD --chmod=444 \
 	https://packages.irods.org/irods-signing-key.asc /etc/apt/trusted.gpg.d/irods-signing-key.asc
-RUN apt-get --quiet --yes install ca-certificates gnupg lsb-release && \
+RUN apt-get --yes install ca-certificates gnupg lsb-release && \
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list && \
-	apt-get --quiet update && \
-	apt-get --quiet --yes install irods-server && \
+	apt-get update && \
+	apt-get --yes install irods-server && \
 #
 ### Install iRODS management script dependencies
-	apt-get --quiet --yes install jq && \
+	apt-get --yes install jq && \
 	apt-get clean && \
 #
 ### Initialize server

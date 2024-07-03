@@ -37,6 +37,7 @@ resolve_irods_host() {
 start_dbms() {
 	printf 'Starting PostgreSQL\n'
 
+	# shellcheck disable=SC2024
 	sudo --login --user=postgres \
 			/usr/lib/postgresql/14/bin/pg_ctl \
 				--log=/var/log/postgresql/postgresql-14-main.log \
@@ -50,6 +51,7 @@ start_dbms() {
 stop_dbms() {
 	printf 'Stopping PostgreSQL\n'
 
+	# shellcheck disable=SC2024
 	sudo --login --user=postgres \
 			/usr/lib/postgresql/14/bin/pg_ctl --pgdata=/var/lib/postgresql/14/main stop \
 		> >(indent /dev/stdout) \

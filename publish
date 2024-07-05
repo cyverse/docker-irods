@@ -8,7 +8,7 @@
 
 set -o errexit -o nounset -o pipefail
 
-EXEC_DIR="$(dirname "$(realpath --canonicalize-existing)")"
+EXEC_DIR="$(dirname "$(realpath --canonicalize-existing "$0")")"
 readonly EXEC_DIR
 
 readonly IMAGE_NAME=cyverse/irods

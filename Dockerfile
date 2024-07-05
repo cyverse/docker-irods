@@ -4,15 +4,17 @@ FROM ubuntu:22.04
 ADD --chmod=444 \
 	https://packages.irods.org/irods-signing-key.asc /etc/apt/trusted.gpg.d/irods-signing-key.asc
 
-COPY apt.irods /etc/apt/preferences.d/irods
+COPY --chmod=444 VERSION /IRODS_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN <<EOF
+RUN --mount=target=/apt.irods,source=apt.irods <<EOF
 	set -o errexit
 	apt-get update
 	apt-get --yes install apt-utils
 	apt-get --yes install ca-certificates gnupg lsb-release
+	IFS= read -r irodsVer < /IRODS_VERSION
+	sed 's/VERSION/'"$irodsVer"'/' /apt.irods > /etc/apt/preferences.d/irods
 
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list
@@ -27,8 +29,10 @@ RUN <<EOF
 
 ### Initialize server
 	apt-get --yes install jq
+
 	jq ".installation_time |= \"$(date '+%Y-%m-%dT%T.%6N')\"" /var/lib/irods/version.json.dist \
 		> /var/lib/irods/version.json
+
 	mkdir /var/lib/irods/.irods
 	chown --recursive irods:irods /var/lib/irods
 

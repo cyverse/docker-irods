@@ -8,13 +8,17 @@
 
 set -o errexit -o nounset -o pipefail
 
-readonly IRODS_RELEASE='4.3.1'
+EXEC_DIR="$(dirname "$(realpath --canonicalize-existing)")"
+readonly EXEC_DIR
 
 readonly IMAGE_NAME=cyverse/irods
 readonly NEW_IMAGE="$IMAGE_NAME":new
 readonly CUR_IMAGE="$IMAGE_NAME":latest
 
 main() {
+	local irodsVer
+	IFS= read -r irodsVer < "$EXEC_DIR"/VERSION
+
 	local newId
 	newId="$(docker image inspect "$NEW_IMAGE" | jq .[0].Id)"
 
@@ -28,7 +32,7 @@ main() {
 		now="$(date --utc '+%Y-%m-%dT%H-%M-%S')"
 
 		local tag
-		for tag in "$IRODS_RELEASE"_"$now" "$IRODS_RELEASE" latest; do
+		for tag in "$irodsVer"_"$now" "$irodsVer" latest; do
 			publish "$tag"
 		done
 	fi

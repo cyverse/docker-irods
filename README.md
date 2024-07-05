@@ -51,9 +51,16 @@ RUN chmod +x /control-status.sh
 CMD [ "/control-status.sh", "CoordRes" ]
 ```
 
+For convenience, the file `/IRODS_VERSION` in the image contains the version of iRODS in the image. The file has the version number on the first line.
+
+```console
+prompt> cat /IRODS_VERSION
+4.3.1
+```
+
 ## Building the Base Image
 
-The command `./build` can be used to build the image. It creates the image `cyverse/irods` with tag `new`.
+The command `./build` can be used to build the image. It creates the image `cyverse/irods` with tag `new`. The version of iRODS in the image is set in the file `./VERSION`.
 
 ```console
 prompt> ./build

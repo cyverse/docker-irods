@@ -1,4 +1,5 @@
 *
 !run-irods.sh
-!apt.irods
+!apt-irods
+!rsyslog-irods.conf
 !VERSION

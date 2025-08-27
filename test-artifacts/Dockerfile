@@ -33,7 +33,7 @@ RUN --mount=target=/tmp/unattended_installation.json,source=unattended_installat
 			/tmp/unattended_installation.json \
 		> /tmp/resolved_installation.json
 
-		python /var/lib/irods/scripts/setup_irods.py --verbose \
+	python3 /var/lib/irods/scripts/setup_irods.py --verbose \
 		--json_configuration_file=/tmp/resolved_installation.json
 
 	rm --force /tmp/resolved_installation.json

@@ -8,13 +8,13 @@ COPY --chmod=444 VERSION /IRODS_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN --mount=target=/apt.irods,source=apt.irods <<EOF
+RUN --mount=target=/apt-irods,source=apt-irods <<EOF
 	set -o errexit
 	apt-get update
 	apt-get --yes install apt-utils
 	apt-get --yes install ca-certificates gnupg lsb-release
 	IFS= read -r irodsVer < /IRODS_VERSION
-	sed 's/VERSION/'"$irodsVer"'/' /apt.irods > /etc/apt/preferences.d/irods
+	sed 's/VERSION/'"$irodsVer"'/' /apt-irods > /etc/apt/preferences.d/irods
 
 	echo deb [arch=amd64] https://packages.irods.org/apt/ "$(lsb_release --codename --short)" main \
 		> /etc/apt/sources.list.d/renci-irods.list
@@ -25,7 +25,7 @@ RUN --mount=target=/apt.irods,source=apt.irods <<EOF
 		irods
 
 	apt-get update
-	apt-get --yes install irods-server
+	apt-get --yes install irods-server rsyslog
 
 ### Initialize server
 	apt-get --yes install jq
@@ -39,7 +39,12 @@ RUN --mount=target=/apt.irods,source=apt.irods <<EOF
 ### Install dumb-init
 	apt-get --yes install dumb-init
 	apt-get clean
+
+### Allow irods user to start rsyslog
+	echo 'irods ALL=(root) NOPASSWD: /usr/sbin/rsyslogd' > /etc/sudoers.d/rsyslogd
 EOF
+
+COPY rsyslog-irods.conf /etc/rsyslog.conf
 
 ### Install iRODS management script
 COPY --chown=irods:irods --chmod=550 run-irods.sh /run-irods

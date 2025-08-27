@@ -1,3 +1,0 @@
-Package: irods-*
-Pin: version VERSION
-Pin-Priority: 1001

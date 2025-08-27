@@ -33,6 +33,9 @@
 # This script expects the following environment variables to be defined.
 #
 # IRODS_CLERVER_PASSWORD   the clerver user password
+#
+# © 2025 The Arizona Board of Regents on behalf of The University of Arizona.
+# For license information, see https://cyverse.org/license.
 
 set -o errexit -o nounset -o pipefail
 
@@ -69,6 +72,7 @@ configured() {
 }
 
 start_server() {
+	sudo rsyslogd
 	call_periphery before_start
 	printf 'Starting iRODS\n'
 
